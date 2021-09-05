@@ -50,7 +50,7 @@ function startgame()
 	
 	-- brick settings
  -- brky=20
- brkw=10
+ brkw=9
  brkh=4
  brkc=8
  buildbricks()
@@ -68,16 +68,16 @@ function buildbricks()
 	brkx={}
  brky={}
  brkv={}
- for i=1,10 do
- 	add(brkx,5+(i-1)*(brkw+2))
- 	add(brky,20)
+ for i=1,55 do
+ 	add(brkx,4+((i-1)%11)*(brkw+2))
+ 	add(brky,20+flr((i-1)/11)*(brkh+2))
  	add(brkv,true)
  end
 end
 
 function serveball()
-	bx=8
- by=60
+	bx=15
+ by=70
  bdx=1
  bdy=1
 end
@@ -224,13 +224,10 @@ function draw_gameover()
 end
 
 function ball_box(nbx,nby,ix,iy,iw,ih)
-	
 	-- checks for collision on ball using sqare
 	if nby-br > iy+ih or nby+br < iy then return false end
-	if nbx-br > ix+iw or nbx+br < ix then return false end
-	
-	return true
-	
+	if nbx-br > ix+iw or nbx+br < ix then return false end	
+	return true	
 end
 
 function deflx_bp(boxx,boxy,boxdx,boxdy,tx,ty,tw,th)
