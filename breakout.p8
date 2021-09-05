@@ -10,7 +10,29 @@ function _init()
 
 	--variables
 
- -- ball settings
+	-- draw vaiables
+	mode="start"
+
+end
+
+function _update60()
+	if mode=="game" then
+		update_game()
+	elseif mode=="start" then
+		update_start()
+	elseif mode=="gameover" then
+		update_gameover()
+	end
+end
+
+function update_start()
+	if btn(5) then
+		startgame()
+	end
+end
+
+function startgame()
+	-- ball settings
  bx=8
  by=60
  bdx=1
@@ -25,10 +47,33 @@ function _init()
  pw=24
  ph=3
  pc=7
-
+	
+	mode="game"
+	
+	lives=3
+	points=0
+	
+	serveball()
 end
 
-function _update60()
+function serveball()
+	bx=8
+ by=60
+ bdx=1
+ bdy=1
+end
+
+function gameover()
+	mode="gameover"
+end
+
+function update_gameover()
+	if btn(5) then
+		startgame()
+	end
+end
+
+function update_game()
  local nextx, nexty
  
  -- check for user input
@@ -58,12 +103,12 @@ function _update60()
 	nby=by+bdy
 
  -- ball wall / barrier colission 	
-	if nbx>120 or nbx<8 then
+	if nbx>125 or nbx<3 then
 	 nbx=mid(0,nbx,120)
 	 bdx=-bdx
 	 sfx(0)
 	end
-	if nby>120 or nby<8 then
+	if nby<10 then
 		nby=mid(0,nby,120)
 		bdy=-bdy
 		sfx(0)
@@ -78,20 +123,60 @@ function _update60()
 			bdy=-bdy
 		end
 		sfx(1)
+		points+=1
 	end
 	
 	-- translate ball movement
 	bx=nbx
 	by=nby
+	
+	if nby > 127 then
+		sfx(2)
+		lives-=1
+		if lives<0 then
+			gameover()
+		else
+			serveball()
+		end
+	end
 end
 
 function _draw()
+	if mode=="game" then
+		draw_game()
+	elseif mode=="start" then
+		draw_start()
+	elseif mode=="gameover" then
+		draw_gameover()
+	end
+end
+
+function draw_start()
+	cls(1)
+	rectfill(0,50,128,75,0)
+	print("▒ breakout ▒",37,55,7)
+	print("press ❎ to start",32,67,8)
+end
+
+function draw_game()
  -- background
 	cls(1)
+	-- stat bar
+	rectfill(0,0,128,6,8)
+	-- lives
+	print("lives:"..lives,1,1,7)
+	print("score:"..points,35,1,7)
  -- ball
 	circfill(bx,by,br,bc)
  -- platform
 	rectfill(px,py,px+pw,py+ph,pc)
+end
+
+function draw_gameover()
+	--cls(1)
+	rectfill(0,50,128,75,0)
+	print("gameover",50,55,7)
+	print("press ❎ to restart",30,67,8)
 end
 
 function ball_box(nbx,nby,ix,iy,iw,ih)
@@ -181,3 +266,4 @@ __gfx__
 __sfx__
 010100001821018210182101821018210182100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000010000400004000040000400000
 010100002422024220242202422024220242200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000900002632027320233201c320153201732018320143200f3200f30000300082000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
