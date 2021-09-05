@@ -33,7 +33,7 @@ end
 
 function startgame()
 	-- ball settings
- bx=8
+ bx=10
  by=60
  bdx=1
  bdy=1
@@ -48,12 +48,31 @@ function startgame()
  ph=3
  pc=7
 	
+	-- brick settings
+ -- brky=20
+ brkw=10
+ brkh=4
+ brkc=8
+ buildbricks()
+	
 	mode="game"
 	
 	lives=3
 	points=0
 	
 	serveball()
+end
+
+function buildbricks()
+	local i
+	brkx={}
+ brky={}
+ brkv={}
+ for i=1,10 do
+ 	add(brkx,5+(i-1)*(brkw+2))
+ 	add(brky,20)
+ 	add(brkv,true)
+ end
 end
 
 function serveball()
@@ -97,6 +116,7 @@ function update_game()
 		
 	-- translate platform movement
 	px+=pdx
+	px=mid(0,px,128-pw)
 
 	-- translate ball movement
 	nbx=bx+bdx
@@ -125,13 +145,28 @@ function update_game()
 		sfx(1)
 		points+=1
 	end
+
+-- ball brick colission
+	for i=1,#brkx do
+		if brkv[i] and ball_box(nbx,nby,brkx[i],brky[i],brkw,brkh) then
+			-- find direction of ball
+			if deflx_bp(bx,by,bdx,bdy,brkx[i],brky[i],brkw,brkh) then
+				bdx=-bdx
+			else
+				bdy=-bdy
+			end
+			sfx(2)
+			brkv[i]=false
+			points+=10
+		end
+	end
 	
 	-- translate ball movement
 	bx=nbx
 	by=nby
 	
 	if nby > 127 then
-		sfx(2)
+		sfx(3)
 		lives-=1
 		if lives<0 then
 			gameover()
@@ -159,13 +194,22 @@ function draw_start()
 end
 
 function draw_game()
+ local i
  -- background
 	cls(1)
 	-- stat bar
 	rectfill(0,0,128,6,8)
 	-- lives
 	print("lives:"..lives,1,1,7)
+	-- score
 	print("score:"..points,35,1,7)
+	-- bricks
+	for i=1,#brkx do
+ 	if brkv[i] then
+			rectfill(brkx[i], brky[i], brkx[i]+brkw, brky[i]+brkh,brkc)
+ 	end
+ end
+ 
  -- ball
 	circfill(bx,by,br,bc)
  -- platform
@@ -192,69 +236,29 @@ end
 function deflx_bp(boxx,boxy,boxdx,boxdy,tx,ty,tw,th)
  -- calculate wether to deflect the ball
  -- horizontally or vertically when it hits a box
+ local slp=boxdy / boxdx
+ local cx, cy
  if boxdx == 0 then
-  -- moving vertically
-  return false
+ 	return false
  elseif boxdy == 0 then
-  -- moving horizontally
-  return true
+ 	return true
+ elseif slp > 0 and boxdx > 0 then
+ 	cx=tx-boxx
+ 	cy=ty-boxy
+ 	return cx > 0 and cy/cx < slp
+ elseif slp < 0 and boxdx > 0 then
+ 	cx=tx-boxx
+ 	cy=ty+th-boxy
+ 	return cx > 0 and cy/cx >= slp
+ elseif slp > 0 and boxdx < 0 then
+ 	cx=tx+tw-boxx
+ 	cy=ty+th-boxy
+ 	return cx < 0 and cy/cx <= slp
  else
-  -- moving diagonally
-  -- calculate slope
-  local slp = boxdy / boxdx
-  local cx, cy
-  -- check variants
-  if slp > 0 and boxdx > 0 then
-   -- moving down right
-   debug1="q1"
-   cx = tx-boxx
-   cy = ty-boxy
-   if cx<=0 then
-    return false
-   elseif cy/cx < slp then
-    return true
-   else
-    return false
-   end
-  elseif slp < 0 and boxdx > 0 then
-   debug1="q2"
-   -- moving up right
-   cx = tx-boxx
-   cy = ty+th-boxy
-   if cx<=0 then
-    return false
-   elseif cy/cx < slp then
-    return false
-   else
-    return true
-   end
-  elseif slp > 0 and boxdx < 0 then
-   debug1="q3"
-   -- moving left up
-   cx = tx+tw-boxx
-   cy = ty+th-boxy
-   if cx>=0 then
-    return false
-   elseif cy/cx > slp then
-    return false
-   else
-    return true
-   end
-  else
-   -- moving left down
-   debug1="q4"
-   cx = tx+tw-boxx
-   cy = ty-boxy
-   if cx>=0 then
-    return false
-   elseif cy/cx < slp then
-    return false
-   else
-    return true
-   end
-  end
+ 	cx=tx+tw-boxx
+ 	cy=ty-boxy
+ 	return cx < 0 and cy/cx >= slp
  end
- return false
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -264,6 +268,7 @@ __gfx__
 00077000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00700700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-010100001821018210182101821018210182100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000010000400004000040000400000
-010100002422024220242202422024220242200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000900002632027320233201c320153201732018320143200f3200f30000300082000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000100001742017420174201742017420174200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000010000400004000040000400000
+000100002042020420204202042020420204200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000010000400004000040000400000
+000100002942029420294202942029420294200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000010000400004000040000400000
+000500002632027320233201c320153201732018320143200f3200f30000300082000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
